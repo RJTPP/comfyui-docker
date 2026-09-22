@@ -1,0 +1,13 @@
+.DS_Store
+.env
+.env.*
+!.env.example
+models/
+input/
+output/
+user/
+custom_nodes/
+*.safetensors
+*.ckpt
+*.pt
+*.pth

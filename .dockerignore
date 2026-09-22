@@ -1,0 +1,10 @@
+.git
+.DS_Store
+.env
+.env.*
+*.safetensors
+models/
+input/
+output/
+user/
+custom_nodes/

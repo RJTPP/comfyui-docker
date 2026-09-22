@@ -1,0 +1,35 @@
+services:
+  comfyui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_UID: ${COMFYUI_UID:-1000}
+        APP_GID: ${COMFYUI_GID:-1000}
+    image: ${COMFYUI_IMAGE:-comfyui-local:0.1.0}
+    restart: "no"
+
+    volumes:
+      - ${COMFYUI_MODELS_DIR:?Set COMFYUI_MODELS_DIR}:/opt/comfyui/models:ro
+      - ${COMFYUI_DATA_DIR:?Set COMFYUI_DATA_DIR}/input:/opt/comfyui/input
+      - ${COMFYUI_DATA_DIR:?Set COMFYUI_DATA_DIR}/output:/opt/comfyui/output
+      - ${COMFYUI_DATA_DIR:?Set COMFYUI_DATA_DIR}/user:/opt/comfyui/user
+      - ${COMFYUI_DATA_DIR:?Set COMFYUI_DATA_DIR}/custom_nodes:/opt/comfyui/custom_nodes
+
+    expose:
+      - "8188"
+
+    networks:
+      - dokploy-network
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+networks:
+  dokploy-network:
+    external: true
