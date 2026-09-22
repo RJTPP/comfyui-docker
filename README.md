@@ -9,7 +9,7 @@ configuration is for an on-demand GPU workload rather than an always-on UI.
 
 - NVIDIA CUDA 13.0.3 runtime on Ubuntu 24.04
 - PyTorch 2.11.0, torchvision 0.26.0, torchaudio 2.11.0 (CUDA 13.0 wheels)
-- ComfyUI v0.37.0 and that release's Python requirements
+- ComfyUI v0.37.0 by default, overridable through the `COMFYUI_REF` build arg
 
 Update these versions deliberately and test the resulting image before
 deployment. The image has not yet been built or GPU-tested by this repository.
@@ -52,8 +52,8 @@ arguments; changing them requires an image rebuild.
    `build`.
 3. In Dokploy's **Environment** tab, set `COMFYUI_MODELS_DIR` and
    `COMFYUI_DATA_DIR` to absolute paths on the target server. Optionally set
-   `COMFYUI_IMAGE`, `COMFYUI_UID`, and `COMFYUI_GID`. See `.env.example` for
-   example values. Never commit a populated `.env` file.
+   `COMFYUI_REF`, `COMFYUI_IMAGE`, `COMFYUI_UID`, and `COMFYUI_GID`. See
+   `.env.example` for example values. Never commit a populated `.env` file.
 4. Deploy. In Dokploy's **Domains** tab, add a hostname for service `comfyui`
    at container port `8188`. The service joins `dokploy-network` for this.
    The Compose file does not publish a raw host port.
@@ -74,6 +74,19 @@ memory has been released with `nvidia-smi` before starting ComfyUI. When done,
 stop ComfyUI and verify the GPU is free before restarting the other service.
 This handoff is manual; this repository does not stop or restart other services.
 
+## Updates and rollback
+
+To try a new stable ComfyUI release, change `COMFYUI_REF` in Dokploy and
+redeploy with a rebuild. Record the deployed version in Git too, for example
+by updating the default in the Dockerfile and Compose file after validation;
+otherwise the Dokploy environment is the only record of that change. Test a
+representative workflow before keeping the new image.
+
+For a dependable rollback, retain a known-good built image tag or digest.
+Setting `COMFYUI_REF` back and rebuilding may resolve different upstream
+packages or a changed base image, so it does not necessarily recreate the
+previous image byte-for-byte.
+
 ## First-deployment checks
 
 - The image builds and the container starts on the selected Dokploy server.
@@ -90,6 +103,9 @@ Custom node source can live in the persistent `custom_nodes` directory, but
 its Python or system dependencies are **not** installed automatically. Add
 only the nodes you need and pin their dependencies in a deliberate image
 revision. Avoid in-place package updates that cannot be reproduced by a build.
+The bind mount hides any custom nodes baked into that image directory; remove
+the mount if you later switch to fully image-managed nodes. ComfyUI Manager is
+not installed or enabled in this minimal image.
 
 For local Compose syntax checks, run:
 
