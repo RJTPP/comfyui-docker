@@ -1,0 +1,23 @@
+services:
+  comfyui:
+    image: ghcr.io/rjtpp/comfyui-docker:${COMFYUI_TAG:-latest}
+    pull_policy: always
+    restart: "no"
+
+    volumes:
+      - ${COMFYUI_MODELS_DIR:?Set COMFYUI_MODELS_DIR}:/opt/comfyui/models:ro
+      - ${COMFYUI_DATA_DIR:?Set COMFYUI_DATA_DIR}/input:/opt/comfyui/input
+      - ${COMFYUI_DATA_DIR:?Set COMFYUI_DATA_DIR}/output:/opt/comfyui/output
+      - ${COMFYUI_DATA_DIR:?Set COMFYUI_DATA_DIR}/user:/opt/comfyui/user
+      - ${COMFYUI_DATA_DIR:?Set COMFYUI_DATA_DIR}/custom_nodes:/opt/comfyui/custom_nodes
+
+    ports:
+      - "127.0.0.1:8188:8188"
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
