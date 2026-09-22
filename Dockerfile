@@ -6,7 +6,8 @@ ARG APP_GID=1000
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PATH=/opt/venv/bin:$PATH \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    HOME=/opt/comfyui/user
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -22,11 +23,9 @@ RUN python3 -m venv /opt/venv \
 RUN git clone --depth 1 --branch "$COMFYUI_REF" \
        https://github.com/Comfy-Org/ComfyUI.git /opt/comfyui \
     && pip install --no-cache-dir -r /opt/comfyui/requirements.txt \
-    && groupadd --gid "$APP_GID" comfy \
-    && useradd --uid "$APP_UID" --gid "$APP_GID" --create-home comfy \
-    && chown -R comfy:comfy /opt/comfyui
+    && chown -R "$APP_UID:$APP_GID" /opt/comfyui
 
-USER comfy
+USER ${APP_UID}:${APP_GID}
 WORKDIR /opt/comfyui
 EXPOSE 8188
 

@@ -37,7 +37,8 @@ subdirectories such as `diffusion_models/`, `text_encoders/`, and `vae/` go
 inside the models directory according to the workflow you use. This repository
 does not download or synchronize model files.
 
-The image defaults to UID/GID 1000. Set `COMFYUI_UID` and `COMFYUI_GID` to the
+The image runs under numeric UID/GID 1000 by default; it does not create a
+named account in the container. Set `COMFYUI_UID` and `COMFYUI_GID` to the
 owner of the writable data directories if different, and make sure the model
 files are readable by that user. Dokploy passes these values as build
 arguments; changing them requires an image rebuild.
