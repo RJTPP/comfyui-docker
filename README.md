@@ -1,8 +1,7 @@
 # ComfyUI for Docker
 
-A minimal NVIDIA/CUDA image for running ComfyUI with Docker. It includes
-ComfyUI and its Python dependencies, but no models, workflows, secrets, or
-third-party custom nodes.
+A minimal NVIDIA/CUDA ComfyUI image. Models, workflows, user data, and
+third-party custom nodes are supplied at runtime, not included in the image.
 
 ## Versions
 
@@ -12,47 +11,35 @@ third-party custom nodes.
 
 ## Requirements
 
-- Linux with Docker
+- Linux with Docker; Docker Compose for the Compose examples
 - NVIDIA GPU and NVIDIA Container Toolkit
 - Host directories for models and persistent data
 
-The image runs as numeric UID/GID `1000:1000` by default. Writable directories
-must have matching ownership, and models must be readable by that user. Change
-`COMFYUI_UID` and `COMFYUI_GID` before building if needed.
+The image runs as numeric UID/GID `1000:1000`. Writable data must be owned by
+that user, and models must be readable by it. To use another UID/GID, build
+from source with `COMFYUI_UID` and `COMFYUI_GID`.
 
-## Docker Compose
+## Prepare host directories
 
-Copy the example environment file and set both host paths:
-
-```bash
-cp .env.example .env
-```
-
-```env
-COMFYUI_MODELS_DIR=/srv/comfyui/models
-COMFYUI_DATA_DIR=/srv/comfyui/data
-```
-
-Create these subdirectories under `COMFYUI_DATA_DIR`: `input`, `output`,
-`user`, and `custom_nodes`. Then start ComfyUI:
+For a new installation using the example paths:
 
 ```bash
-docker compose up -d
+sudo mkdir -p /srv/comfyui/models /srv/comfyui/data/{input,output,user,custom_nodes}
+sudo chown 1000:1000 /srv/comfyui/data/{input,output,user,custom_nodes}
 ```
 
-Open <http://127.0.0.1:8188>. The port is bound to localhost and the container
-has no built-in authentication.
+Adjust the paths for your host. Existing files in the data directories must
+also be writable by UID/GID `1000:1000`. Models are mounted read-only.
+
+## Use the prebuilt image
+
+The GHCR image supports `linux/amd64`. `latest` is a moving tag; use `0.1.0`
+to select that release.
+
+### Docker
 
 ```bash
-docker compose stop
-```
-
-## Docker
-
-The same image can be built and run without Compose:
-
-```bash
-docker build -t comfyui-local:0.1.0 .
+docker pull ghcr.io/rjtpp/comfyui-docker:latest
 docker run -d --name comfyui --gpus 1 \
   -p 127.0.0.1:8188:8188 \
   --mount type=bind,src=/srv/comfyui/models,dst=/opt/comfyui/models,readonly \
@@ -60,38 +47,74 @@ docker run -d --name comfyui --gpus 1 \
   --mount type=bind,src=/srv/comfyui/data/output,dst=/opt/comfyui/output \
   --mount type=bind,src=/srv/comfyui/data/user,dst=/opt/comfyui/user \
   --mount type=bind,src=/srv/comfyui/data/custom_nodes,dst=/opt/comfyui/custom_nodes \
-  comfyui-local:0.1.0
+  ghcr.io/rjtpp/comfyui-docker:latest
 ```
 
-All source directories must exist before using `docker run --mount`.
+### Docker Compose
+
+Copy the prebuilt example, edit the host paths and optional `COMFYUI_TAG`,
+then start the service:
+
+```bash
+cp .env.image.example .env
+docker compose -f compose.image.yaml up -d
+```
+
+Compose pulls the image from GHCR. A private package requires registry
+authentication on the Docker host.
+
+Open <http://127.0.0.1:8188>. The port is bound to localhost; ComfyUI has no
+built-in authentication. Stop with `docker stop comfyui` or
+`docker compose -f compose.image.yaml stop`, depending on how you started it.
+
+## Build from source
+
+### Docker Compose
+
+Copy the source-build example, edit the host paths or build arguments, and
+start the service:
+
+```bash
+cp .env.example .env
+docker compose up -d
+```
+
+`compose.yaml` builds the image locally. Stop with `docker compose stop`.
+
+### Docker
+
+```bash
+docker build -t comfyui-local:0.1.0 .
+```
+
+Run it with the Docker command above, replacing the final image reference
+with `comfyui-local:0.1.0`.
 
 ## Dokploy
 
-Create a Docker Compose service from this repository and set the environment
-variables from `.env.example`. Remove the localhost `ports` entry from the
-Compose configuration if you do not want a host port.
+Create a Docker Compose service from this repository. Set **Compose Path** to
+`./compose.image.yaml` to pull the prebuilt image or `./compose.yaml` to build
+from source. Set the host paths from the matching example environment file.
+Private GHCR images require registry authentication; public images do not.
 
-In **Domains**, route service `comfyui` to container port `8188`. Check
-**Preview Compose** to verify the labels and network Dokploy adds. An explicit
-`dokploy-network` entry is unnecessary for this single service when a domain is
-configured. See [Dokploy's Compose domains documentation](https://docs.dokploy.com/docs/core/docker-compose/domains).
+For a domain-only deployment, remove the localhost `ports` entry in a
+deployment-specific Compose copy. In **Domains**, route service `comfyui` to
+container port `8188`, then inspect **Preview Compose** for the generated
+labels and network. See [Dokploy's domain documentation](https://docs.dokploy.com/docs/core/docker-compose/domains).
 
 ## Notes
 
-- Models are mounted read-only; input, output, user data, and custom nodes persist
-  on the host.
-- Custom-node dependencies are not installed automatically. ComfyUI Manager is
-  not included.
-- Change `COMFYUI_REF` to build another ComfyUI version.
-- Rebuilds are not byte-for-byte reproducible because the base image and all
+- Custom-node dependencies and ComfyUI Manager are not installed automatically.
+- Source rebuilds are not byte-for-byte reproducible: the base image and all
   transitive Python packages are not pinned by digest or hash.
 - Validate GPU detection, directory permissions, persistence, and a
   representative workflow on the target host.
 
-Check the Compose configuration without building or starting it:
+Check either Compose file without starting a container:
 
 ```bash
-docker compose --env-file .env.example config
+docker compose --env-file .env.image.example -f compose.image.yaml config
+docker compose --env-file .env.example -f compose.yaml config
 ```
 
 This repository does not run automated image-build or GPU integration tests.
