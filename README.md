@@ -33,8 +33,8 @@ also be writable by UID/GID `1000:1000`. Models are mounted read-only.
 
 ## Use the prebuilt image
 
-The GHCR image supports `linux/amd64`. `latest` is a moving tag; use `0.1.0`
-to select that release.
+The prebuilt image supports `linux/amd64`. `latest` is a moving tag;
+use a version tag to pin a release.
 
 ### Docker
 
@@ -60,9 +60,6 @@ cp .env.image.example .env
 docker compose -f compose.image.yaml up -d
 ```
 
-Compose pulls the image from GHCR. A private package requires registry
-authentication on the Docker host.
-
 Open <http://127.0.0.1:8188>. The port is bound to localhost; ComfyUI has no
 built-in authentication. Stop with `docker stop comfyui` or
 `docker compose -f compose.image.yaml stop`, depending on how you started it.
@@ -79,23 +76,22 @@ cp .env.example .env
 docker compose up -d
 ```
 
-`compose.yaml` builds the image locally. Stop with `docker compose stop`.
+Stop with `docker compose stop`.
 
 ### Docker
 
 ```bash
-docker build -t comfyui-local:0.1.0 .
+docker build -t comfyui-local:dev .
 ```
 
 Run it with the Docker command above, replacing the final image reference
-with `comfyui-local:0.1.0`.
+with `comfyui-local:dev`.
 
 ## Dokploy
 
 Create a Docker Compose service from this repository. Set **Compose Path** to
 `./compose.image.yaml` to pull the prebuilt image or `./compose.yaml` to build
 from source. Set the host paths from the matching example environment file.
-Private GHCR images require registry authentication; public images do not.
 
 For a domain-only deployment, remove the localhost `ports` entry in a
 deployment-specific Compose copy. In **Domains**, route service `comfyui` to
