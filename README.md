@@ -89,14 +89,18 @@ with `comfyui-local:dev`.
 
 ## Dokploy
 
-Create a Docker Compose service from this repository. Set **Compose Path** to
-`./compose.image.yaml` to pull the prebuilt image or `./compose.yaml` to build
-from source. Set the host paths from the matching example environment file.
+Create a Docker Compose service and choose a source:
 
-For a domain-only deployment, remove the localhost `ports` entry in a
-deployment-specific Compose copy. In **Domains**, route service `comfyui` to
-container port `8188`, then inspect **Preview Compose** for the generated
-labels and network. See [Dokploy's domain documentation](https://docs.dokploy.com/docs/core/docker-compose/domains).
+- **Git repository:** Link this repository and use `./compose.image.yaml` as the
+  **Compose Path** for the prebuilt image, or `./compose.yaml` to build on Dokploy.
+- **Raw Compose:** Paste `compose.image.yaml` into Dokploy's editor to use the
+  prebuilt image.
+
+Set the host paths from the matching example environment file. For no host
+port binding, remove the localhost `ports` entry in Raw Compose or a
+separate deployment Compose file. In **Domains**, route service `comfyui` to
+container port `8188`, then check **Preview Compose** for the generated labels
+and network. See [Dokploy's domain documentation](https://docs.dokploy.com/docs/core/docker-compose/domains).
 
 ## Notes
 
