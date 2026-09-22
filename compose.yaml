@@ -8,6 +8,7 @@ services:
         APP_UID: ${COMFYUI_UID:-1000}
         APP_GID: ${COMFYUI_GID:-1000}
     image: ${COMFYUI_IMAGE:-comfyui-local:0.1.0}
+    pull_policy: build
     restart: "no"
 
     volumes:
@@ -17,11 +18,8 @@ services:
       - ${COMFYUI_DATA_DIR:?Set COMFYUI_DATA_DIR}/user:/opt/comfyui/user
       - ${COMFYUI_DATA_DIR:?Set COMFYUI_DATA_DIR}/custom_nodes:/opt/comfyui/custom_nodes
 
-    expose:
-      - "8188"
-
-    networks:
-      - dokploy-network
+    ports:
+      - "127.0.0.1:8188:8188"
 
     deploy:
       resources:
@@ -30,7 +28,3 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
-
-networks:
-  dokploy-network:
-    external: true
